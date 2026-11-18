@@ -17,3 +17,7 @@ Exploración hecha el 17-nov-2026 con `src/explorar2.py`.
 | `Radicado` no es único (identifica el incidente, no la víctima) | Fila = víctima; usar un id propio de fila |
 | 197 duplicados exactos | Marcar, no borrar; pueden ser víctimas distintas del mismo incidente |
 | `Sin Inf` / `Sin inf`, `Motocicleta` / `motocicleta` |
+| Latitud y longitud intercambiadas (2.112 filas) | Intercambiar los valores y dejarlos en su columna |
+| Coordenadas fuera del Valle de Aburrá (3 filas) | Dejar en `NULL` |
+| ~20.800 filas sin coordenadas (8,8 %) | Conservar con `NULL`; indicar en el dashboard |
+| 355 edades mayores a 110 | Rechazar y guardar en `victimas_rechazos.csv` |
