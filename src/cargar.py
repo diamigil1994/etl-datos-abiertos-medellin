@@ -19,6 +19,7 @@ RUTA_CSV = Path("data/processed/victimas_transformado.csv")
 RUTA_SQL_STAGING = Path("sql/01_staging.sql")
 RUTA_SQL_MODELO = Path("sql/02_modelo.sql")
 RUTA_SQL_CARGA = Path("sql/03_carga_modelo.sql")
+RUTA_SQL_VISTAS = Path("sql/04_vistas.sql")
 
 
 def cadena_conexion(base):
@@ -113,11 +114,15 @@ def ejecutar():
     # Conciliación: lo que sale de Python debe ser igual a lo que entra a SQL Server
     assert en_sql == len(df)
 
-    # Modelo estrella: se crean las tablas y el procedimiento, y se ejecuta la carga
+        # Modelo estrella: se crean las tablas y el procedimiento, y se ejecuta la carga
     ejecutar_script(RUTA_SQL_MODELO)
     ejecutar_script(RUTA_SQL_CARGA)
     leidas, cargadas, estado = cargar_modelo()
     print("Modelo estrella:        leídas", leidas, "| cargadas", cargadas, "|", estado)
+
+    # Vistas para Power BI (se crean después de las tablas del modelo)
+    ejecutar_script(RUTA_SQL_VISTAS)
+    print("Vistas creadas")
 
 
 if __name__ == "__main__":
