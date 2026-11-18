@@ -21,3 +21,4 @@ Exploración hecha el 17-nov-2026 con `src/explorar2.py`.
 | Coordenadas fuera del Valle de Aburrá (3 filas) | Dejar en `NULL` |
 | ~20.800 filas sin coordenadas (8,8 %) | Conservar con `NULL`; indicar en el dashboard |
 | 355 edades mayores a 110 | Rechazar y guardar en `victimas_rechazos.csv` |
+| 1 fila (línea 75132 del CSV, radicado 61297) con `Año` = 2017 y `Fecha_incidente` = 2016-05-02; el mes y el día de la semana coinciden con la fecha | El modelo deriva el año de la fecha; la columna `Año` no se usa |
