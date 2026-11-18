@@ -35,9 +35,11 @@ CREATE TABLE dwh.dim_hora (
 
 CREATE TABLE dwh.dim_ubicacion (
     ubicacion_key  INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_dim_ubicacion PRIMARY KEY,
-    comuna_codigo  NVARCHAR(10)  NULL,
-    comuna_nombre  NVARCHAR(100) NULL,
-    barrio         NVARCHAR(150) NULL
+    comuna_codigo  NVARCHAR(10)  NOT NULL,
+    comuna_nombre  NVARCHAR(100) NOT NULL,
+    tipo_zona      NVARCHAR(20)  NOT NULL,   -- Comuna, Corregimiento o Sin información
+    barrio         NVARCHAR(150) NOT NULL,
+    CONSTRAINT UQ_dim_ubicacion UNIQUE (comuna_codigo, barrio)
 );
 
 CREATE TABLE dwh.dim_clase_incidente (
