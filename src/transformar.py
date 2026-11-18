@@ -85,7 +85,7 @@ def aplicar_reglas(df):
     return validos, rechazados
 
 
-if __name__ == "__main__":
+def ejecutar():
     df = pd.read_csv(RUTA_ENTRADA, dtype=str)
     total = len(df)
 
@@ -102,8 +102,6 @@ if __name__ == "__main__":
     print("Edades inválidas anuladas (NULL):     ", n_edades)
     print("Filas válidas:                        ", len(validos))
     print("Filas rechazadas:                     ", len(rechazados))
-    print()
-    print(validos[["Edad", "Latitud", "Longitud"]].describe())
 
     # Conciliación: nada se pierde sin explicación
     assert len(validos) + len(rechazados) == total
@@ -112,3 +110,5 @@ if __name__ == "__main__":
     rechazados.to_csv(RUTA_RECHAZOS, index=False)
 
 
+if __name__ == "__main__":
+    ejecutar()

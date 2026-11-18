@@ -23,7 +23,7 @@ def extraer():
     return df, total_leidas, descartadas
 
 
-if __name__ == "__main__":
+def ejecutar():
     df, total_leidas, descartadas = extraer()
 
     RUTA_SALIDA.parent.mkdir(parents=True, exist_ok=True)
@@ -32,4 +32,7 @@ if __name__ == "__main__":
     print("Filas leídas:      ", total_leidas)
     print("Filas descartadas: ", descartadas)
     print("Filas conservadas: ", len(df))
-    print("Archivo generado:  ", RUTA_SALIDA)
+
+
+if __name__ == "__main__":
+    ejecutar()

@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from urllib.parse import quote_plus
 
@@ -16,6 +17,8 @@ CLAVE = os.getenv("DB_PASSWORD")
 
 RUTA_CSV = Path("data/processed/victimas_transformado.csv")
 RUTA_SQL_STAGING = Path("sql/01_staging.sql")
+RUTA_SQL_MODELO = Path("sql/02_modelo.sql")
+RUTA_SQL_CARGA = Path("sql/03_carga_modelo.sql")
 
 
 def cadena_conexion(base):
@@ -33,11 +36,15 @@ def crear_base():
     conexion.close()
 
 
-def crear_staging():
-    """Ejecuta sql/01_staging.sql: recrea la tabla stg.victimas vacía."""
-    sql = RUTA_SQL_STAGING.read_text(encoding="utf-8")
+def ejecutar_script(ruta):
+    """Ejecuta un archivo .sql, dividiéndolo en lotes en cada línea GO."""
+    texto = ruta.read_text(encoding="utf-8")
+    lotes = re.split(r"^\s*GO\s*$", texto, flags=re.IGNORECASE | re.MULTILINE)
+
     conexion = pyodbc.connect(cadena_conexion(BASE), autocommit=True)
-    conexion.execute(sql)
+    for lote in lotes:
+        if lote.strip():
+            conexion.execute(lote)
     conexion.close()
 
 
@@ -80,17 +87,38 @@ def contar_staging():
     return total
 
 
-if __name__ == "__main__":
+def cargar_modelo():
+    """Ejecuta el procedimiento que llena el modelo estrella y devuelve la última fila de la bitácora."""
+    conexion = pyodbc.connect(cadena_conexion(BASE), autocommit=True)
+    conexion.execute("EXEC dwh.sp_cargar_modelo")
+    fila = conexion.execute(
+        "SELECT TOP 1 filas_leidas, filas_cargadas, estado "
+        "FROM dwh.bitacora_carga ORDER BY carga_id DESC"
+    ).fetchone()
+    conexion.close()
+    return fila
+
+
+def ejecutar():
     crear_base()
-    crear_staging()
 
+    # Staging: se recrea vacío y se llena desde el CSV transformado
+    ejecutar_script(RUTA_SQL_STAGING)
     df = preparar_datos()
-    print("Filas a cargar:      ", len(df))
-
     cargar_staging(df)
     en_sql = contar_staging()
-    print("Filas en stg.victimas:", en_sql)
+    print("Filas a cargar:        ", len(df))
+    print("Filas en stg.victimas: ", en_sql)
 
     # Conciliación: lo que sale de Python debe ser igual a lo que entra a SQL Server
     assert en_sql == len(df)
-    print("Carga conciliada.")
+
+    # Modelo estrella: se crean las tablas y el procedimiento, y se ejecuta la carga
+    ejecutar_script(RUTA_SQL_MODELO)
+    ejecutar_script(RUTA_SQL_CARGA)
+    leidas, cargadas, estado = cargar_modelo()
+    print("Modelo estrella:        leídas", leidas, "| cargadas", cargadas, "|", estado)
+
+
+if __name__ == "__main__":
+    ejecutar()
