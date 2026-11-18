@@ -6,6 +6,7 @@ RUTA_SALIDA = Path("data/processed/victimas_transformado.csv")
 RUTA_RECHAZOS = Path("data/processed/victimas_rechazos.csv")
 
 SIN_INFO = "Sin información"
+EDAD_MAX = 110
 
 
 def limpiar_texto(df):
@@ -59,6 +60,13 @@ def corregir_coordenadas(df):
     return df, int(intercambiadas.sum()), int(fuera.sum())
 
 
+def anular_edades_invalidas(df):
+    """Edades fuera de 0-110 son códigos de 'sin información': se anulan y la fila se conserva."""
+    fuera = (df["Edad"] < 0) | (df["Edad"] > EDAD_MAX)
+    df.loc[fuera, "Edad"] = float("nan")
+    return df, int(fuera.sum())
+
+
 def aplicar_reglas(df):
     """Separa filas válidas de rechazadas, con el primer motivo que falla."""
     motivo = pd.Series(None, index=df.index, dtype="object")
@@ -66,7 +74,6 @@ def aplicar_reglas(df):
     reglas = [
         ("Fecha inválida", df["Fecha_incidente"].isna()),
         ("Gravedad inválida", ~df["Gravedad_victima"].isin(["Heridos", "Muertos"])),
-        ("Edad fuera de rango (0-110)", (df["Edad"] < 0) | (df["Edad"] > 110)),
     ]
     for nombre, falla in reglas:
         # Solo se asigna si la fila todavía no tiene motivo (el primero que falla)
@@ -86,15 +93,15 @@ if __name__ == "__main__":
     df = normalizar_categorias(df)
     df = convertir_tipos(df)
     df, n_intercambiadas, n_fuera = corregir_coordenadas(df)
+    df, n_edades = anular_edades_invalidas(df)
     validos, rechazados = aplicar_reglas(df)
 
-    print("Filas de entrada:         ", total)
+    print("Filas de entrada:                     ", total)
     print("Coordenadas intercambiadas corregidas:", n_intercambiadas)
     print("Coordenadas fuera de área anuladas:   ", n_fuera)
-    print("Filas válidas:            ", len(validos))
-    print("Filas rechazadas:         ", len(rechazados))
-    print()
-    print(rechazados["motivo_rechazo"].value_counts())
+    print("Edades inválidas anuladas (NULL):     ", n_edades)
+    print("Filas válidas:                        ", len(validos))
+    print("Filas rechazadas:                     ", len(rechazados))
     print()
     print(validos[["Edad", "Latitud", "Longitud"]].describe())
 
